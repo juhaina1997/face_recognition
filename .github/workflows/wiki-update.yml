@@ -1,0 +1,23 @@
+name: Wiki Update Notification
+
+on:
+  gollum:
+    branches:
+      - main
+
+jobs:
+  slack-notification:
+    runs-on: macos-latest  # Changed from ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "📝 Wiki Page Updated"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
