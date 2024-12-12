@@ -5,37 +5,16 @@ on:
       - main
 jobs:
   slack-notification:
-    runs-on: macos-latest
+    runs-on: macos-latest  # Changed from ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      - name: Generate Wiki Page Links
-        id: wiki-links
-        run: |
-          links=""
-          for page in ${{ github.event.pages }}; do
-            page_name=$(echo "$page" | jq -r '.page_name')
-            html_url=$(echo "$page" | jq -r '.html_url')
-            links+="- <$html_url|$page_name>\n"
-          done
-          echo "WIKI_LINKS=$links" >> $GITHUB_OUTPUT
-      
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "Wiki Page(s) Updated",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "The following wiki pages have been updated:\n${{ steps.wiki-links.outputs.WIKI_LINKS }}"
-                  }
-                }
-              ]
+              "text": ":memo: Wiki Page Updated: <${{ github.event.pages[0].html_url }}|Click here to view>"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
