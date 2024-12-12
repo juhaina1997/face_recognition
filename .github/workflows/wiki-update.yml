@@ -7,17 +7,42 @@ on:
 
 jobs:
   slack-notification:
-    runs-on: macos-latest  # Changed from ubuntu-latest
+    runs-on: ubuntu-latest  # Use Ubuntu for compatibility with jq
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Debug GitHub Event
+        run: |
+          echo "Full GitHub event data:"
+          echo "${{ toJSON(github.event) }}"  # Prints the full event payload for debugging
+
+      - name: Prepare Slack Message
+        id: prepare_message
+        run: |
+          echo "Preparing Slack message..."
+          # Extract updated pages and format them correctly
+          PAGES=$(echo "${{ toJSON(github.event.pages) }}" | jq -r '.[] | "- [\(.title)](\(.html_url))"')
+          echo "Updated Pages: $PAGES"  # Debug output to check page data
+          echo "UPDATED_PAGES=$PAGES" >> $GITHUB_ENV
+
+      - name: Debug Updated Pages
+        run: |
+          echo "DEBUG: UPDATED_PAGES=${{ env.UPDATED_PAGES }}"  # Debug the value of UPDATED_PAGES
 
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "📝 Wiki Page Updated"
+              "text": "📝 The following Wiki pages were updated:",
+              "attachments": [
+                {
+                  "title": "Updated Pages",
+                  "text": "${{ env.UPDATED_PAGES }}",
+                  "color": "#36a64f"
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
